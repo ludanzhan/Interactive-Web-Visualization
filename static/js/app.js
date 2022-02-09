@@ -67,16 +67,13 @@ d3.json("samples.json").then(function(data){
     console.log(metadata);
     const selData = d3.select("#selDataset");
 
+    // push each id to the dropdown menu bar
     for (let i =0; i<metadata.length; i++){
         selData.append("option").text(metadata[i].id);
     }
-
-
+    
+    // grab the demorgraph card 
     let sample_metadata = d3.select("#sample-metadata");
-
-    
-    
-  
 
 
 });

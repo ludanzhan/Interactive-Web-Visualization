@@ -1,29 +1,35 @@
-//initialize the website
-
+// read in the json files
 d3.json("samples.json").then(function(sampledata){
     const data = sampledata;
 
     let id = data.names;
     console.log(id);
 
+    // grab the dropdown menu
     const selectBox = d3.select("#selDataset");
 
+    // adding ids to the dropdown menu
     for(let i =0; i< id.length; i++){
         selectBox.append("option").text(id[i]);
     }
 
     unpdateChart(0);
 
+    // function to create real-time chart based on the dropdown value
     function unpdateChart(id){
+        // extract and store each value needed
         const sample_values = data.samples[id].sample_values;
         const otu_ids =  data.samples[id].otu_ids;  
-        const otu_labels =  data.samples[0].otu_labels.slice(0,10).reverse();;
 
+        // slicing the value in descending order
+        const otu_labels =  data.samples[0].otu_labels.slice(0,10).reverse();;
         const top10Sample = sample_values.slice(0,10).reverse();
         const top10Id = otu_ids.slice(0,10).reverse();
 
+        // create labels in correct  format
         const yAxis = top10Id.map(item => 'OTU' + " " + item).reverse();
 
+        // create bar chart
         let trace = {
             x: top10Sample,
             y: yAxis,
@@ -32,6 +38,7 @@ d3.json("samples.json").then(function(sampledata){
             text: otu_labels
         };
 
+        // bar chart layout
         let layout = {
             width: 350,
             height: 550
@@ -72,12 +79,14 @@ d3.json("samples.json").then(function(sampledata){
             {   domain: { x: [0, 1], y: [0, 1] },
                 value: wfreq,
                 title: { text: "Belly Button Washes Per Week" },
+                delta: { reference: 0, increasing: { color: "#8eab80"} },
                 type: "indicator",
-                mode: "gauge+number",
+                mode: "gauge+number+delta",
                 gauge: {
-                    axis: { range: [0, 9],tickwidth: 0.5, tickcolor: "black"},
-                    text: ['0-1','1-2','2-3','3-4','4-5','5-6','6-7','7-8','8-9'],
-                    bar: { color: "#f2e9e4" },
+                    axis: { range: [0, 9],
+                            tickwidth: 0.5, 
+                            tickcolor: "black"},
+                    bar: { color: "#e0b6bb" },
                     borderwidth: 5,
                     bordercolor: "transparent",
                     steps: [

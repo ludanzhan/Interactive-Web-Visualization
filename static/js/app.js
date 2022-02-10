@@ -1,81 +1,132 @@
-d3.json("samples.json").then(function(data){ 
-    // extract sample values
-    let sample_values = data.samples[0].sample_values;
+//initialize the website
 
-    // slicing the first ten in descending order
-    sampleSlice = sample_values.slice(0,10);
-    sampleSlice = sampleSlice.reverse();
+d3.json("samples.json").then(function(sampledata){
+    const data = sampledata;
 
-    //extract "otu id", slicing the first ten in descending order
-    let otu_ids = data.samples[0].otu_ids
-    idSlice = otu_ids.slice(0,10);
-    idSlice = idSlice.reverse();
+    let id = data.names;
+    console.log(id);
 
-    //extract "otu labels"
-    let otu_labels = data.samples[0].otu_labels;
+    const selectBox = d3.select("#selDataset");
 
-    //console.log("sample values: ",sample_values);
-    //console.log("otu id: ", otu_ids);
-    //console.log("label: " , otu_labels);
-
-    const yAxis = idSlice.map(item => 'OTU' + " " + item);
-
-    // create bar chart with layout
-    let trace = {
-        x: sampleSlice,
-        y: yAxis,
-        type: "bar",
-        orientation: "h",
-        text: otu_labels
-    };
-
-    let layout = {
-        width: 350,
-        height: 550
-    };
-
-    let traceData = [trace];
-    Plotly.newPlot("bar", traceData, layout);
-
-    // create bubble chart
-    let bubbleTrace = {
-        x : otu_ids,
-        y : sample_values,
-        mode: 'markers',
-        marker:{
-            size: sample_values,
-            color: otu_ids
-        },
-        text: otu_labels
+    for(let i =0; i< id.length; i++){
+        selectBox.append("option").text(id[i]);
     }
 
+    unpdateChart(0);
 
-    let bubbleLayout = {    
-        showlegend: true,
-        xaxis: {title:'OTU ID'},
-        yaxis: {title:'Sample Value'},
-        height: 600,
-        width: 1200
-    };
+    function unpdateChart(id){
+        const sample_values = data.samples[id].sample_values;
+        const otu_ids =  data.samples[id].otu_ids;  
+        const otu_labels =  data.samples[0].otu_labels.slice(0,10).reverse();;
 
-    let bubbleData = [bubbleTrace];
+        const top10Sample = sample_values.slice(0,10).reverse();
+        const top10Id = otu_ids.slice(0,10).reverse();
 
-    Plotly.newPlot("bubble", bubbleData, bubbleLayout);
+        const yAxis = top10Id.map(item => 'OTU' + " " + item).reverse();
 
-    // grab the dropdown menu
-    const metadata = data.metadata;
-    console.log(metadata);
-    const selData = d3.select("#selDataset");
+        let trace = {
+            x: top10Sample,
+            y: yAxis,
+            type: "bar",
+            orientation: "h",
+            text: otu_labels
+        };
 
-    // push each id to the dropdown menu bar
-    for (let i =0; i<metadata.length; i++){
-        selData.append("option").text(metadata[i].id);
+        let layout = {
+            width: 350,
+            height: 550
+        };
+
+        let traceData = [trace];
+        Plotly.newPlot("bar", traceData, layout);
+
+
+            // create bubble chart
+        let bubbleTrace = {
+            x : otu_ids,
+            y : sample_values,
+            mode: 'markers',
+            marker:{
+                size: sample_values,
+                color: otu_ids
+            },
+            text: otu_labels
+        }
+
+        let bubbleLayout = {    
+            showlegend: true,
+            xaxis: {title:'OTU ID'},
+            yaxis: {title:'Sample Value'},
+            height: 600,
+            width: 1200
+        };
+
+        let bubbleData = [bubbleTrace];
+
+        Plotly.newPlot("bubble", bubbleData, bubbleLayout);
+
+        let wfreq = data.metadata[id].wfreq;
+        console.log("wfreq",wfreq);
+
+        let gaugeTrace = [
+            {   domain: { x: [0, 1], y: [0, 1] },
+                value: wfreq,
+                title: { text: "Belly Button Washes Per Week" },
+                type: "indicator",
+                mode: "gauge+number",
+                gauge: {
+                    axis: { range: [0, 9],tickwidth: 0.5, tickcolor: "black"},
+                    text: ['0-1','1-2','2-3','3-4','4-5','5-6','6-7','7-8','8-9'],
+                    bar: { color: "#f2e9e4" },
+                    borderwidth: 5,
+                    bordercolor: "transparent",
+                    steps: [
+                        { range: [0, 1], color: "#f5f5ef"  },
+                        { range: [1, 2], color: "#ebebe0" },
+                        { range: [2, 3], color: "#d3d6ba" },
+                        { range: [3, 4], color: "#e3e8ba"},
+                        { range: [4, 5], color: "#cee3aa" },
+                        { range: [5, 6], color: "#adc28d" },
+                        { range: [6, 7], color: "#98c28d" },
+                        { range: [7, 8], color: "#88ba8a" },
+                        { range: [8, 9], color: "#7eab80" }
+                    ],
+                }
+            }
+         ];
+
+        let gaugeLayout = 
+        { width: 600, height: 450, margin: { t: 0, b: 0 } }
+        
+        Plotly.newPlot('gauge', gaugeTrace, gaugeLayout);
+
+        let keys = Object.keys(data.metadata[id]);
+        let values = Object.values(data.metadata[id]) 
+        let sample_metadata = d3.select("#sample-metadata");
+
+        sample_metadata.html("");
+
+        for(let i =0; i< keys.length; i++){
+            sample_metadata.append("p").text(keys[i] + ": " + values[i]);
+        }  
     }
-    
-    // grab the demorgraph card 
-    let sample_metadata = d3.select("#sample-metadata");
 
+    d3.selectAll("#selDataset").on("change", updateData);
 
-});
+    function updateData(){
+        let dropdownMenu = d3.select("#selDataset");
+        // Assign the value of the dropdown menu option to a variable
+        let dataset = dropdownMenu.property("value");
+        console.log("value", dataset);
+
+        for(let i =0; i< data.names.length; i++){
+            if(dataset === data.names[i]){
+                unpdateChart(i);
+            }
+        }
+    }
+
+});   
+
 
 
